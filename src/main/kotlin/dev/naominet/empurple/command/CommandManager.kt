@@ -1,5 +1,6 @@
 package dev.naominet.empurple.command
 
+import dev.naominet.empurple.command.impl.CommandTicket
 import dev.naominet.empurple.command.impl.CommandWhoami
 import dev.naominet.purple.framework.beans.TextMessageBean
 
@@ -9,13 +10,14 @@ object CommandManager {
 
     init {
         register(CommandWhoami())
+        register(CommandTicket())
     }
 
     fun register(command: ICommand) {
         commands.add(command)
     }
 
-    suspend fun process(message: dev.naominet.purple.framework.beans.TextMessageBean) {
+    suspend fun process(message: TextMessageBean) {
         val commandString = message.raw_message
         if (!commandString.startsWith(prefix)) return
 

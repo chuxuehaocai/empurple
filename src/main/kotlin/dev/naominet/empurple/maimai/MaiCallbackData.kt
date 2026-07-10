@@ -8,5 +8,6 @@ data class MaiCallbackData(
     val sourceGroupId: Long,
     val originMsgId: Long,
     val function: suspend (TextMessageBean, MaiCallbackData) -> Unit,
-    val time: LocalDateTime
+    val time: LocalDateTime,
+    val ticketId: Int = 0
 )
