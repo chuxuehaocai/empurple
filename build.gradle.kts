@@ -15,6 +15,7 @@ dependencies {
     implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.60")
     implementation("io.ktor:ktor-client-core:3.3.2")
     implementation("io.ktor:ktor-client-cio:3.3.2")
+    implementation("org.luaj:luaj-jse:3.0.1")
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }

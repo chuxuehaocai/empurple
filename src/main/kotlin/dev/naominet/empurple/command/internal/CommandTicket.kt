@@ -1,4 +1,4 @@
-package dev.naominet.empurple.command.impl
+package dev.naominet.empurple.command.internal
 
 import com.alibaba.fastjson2.JSON
 import dev.naominet.empurple.EmpurplePlugin
@@ -20,7 +20,6 @@ import dev.naominet.empurple.maimai.request.UserLogoutRequest
 import dev.naominet.empurple.maimai.request.UserPreviewRequest
 import dev.naominet.purple.framework.beans.TextMessageBean
 import dev.naominet.purple.framework.core.Bot
-import dev.naominet.purple.framework.logger.Logger
 import dev.naominet.purple.framework.utils.MessageBuilder
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
