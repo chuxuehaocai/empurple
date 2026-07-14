@@ -189,6 +189,28 @@ object ResourceHelper {
         }
     }
 
+    fun coverImageBase64(coverId: String): String? {
+        val cacheFile = File(coverCacheFolder, "$coverId.png")
+
+        if (cacheFile.exists()) {
+            try {
+                val bytes = Files.readAllBytes(cacheFile.toPath())
+                return Base64.getEncoder().encodeToString(bytes)
+            } catch (_: IOException) {
+            }
+        }
+
+        val id = coverId.toIntOrNull()?.let { if (it > 10000) it - 10000 else it } ?: return null
+        val bytes = downloadBytes("https://assets2.lxns.net/maimai/jacket/$id.png") ?: return null
+
+        return try {
+            Files.write(cacheFile.toPath(), bytes)
+            Base64.getEncoder().encodeToString(bytes)
+        } catch (_: IOException) {
+            null
+        }
+    }
+
     private fun downloadBytes(url: String, userAgent: String = "KanadeBot/1.0"): ByteArray? = runBlocking {
         try {
             val response = client.get(url) {

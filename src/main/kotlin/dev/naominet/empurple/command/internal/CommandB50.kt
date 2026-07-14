@@ -19,6 +19,7 @@ import dev.naominet.empurple.maimai.request.UserMusicDataRequest
 import dev.naominet.empurple.maimai.request.UserPreviewRequest
 import dev.naominet.empurple.maimai.request.UserRatingRequest
 import dev.naominet.empurple.utils.Best50ImageRenderer
+import dev.naominet.empurple.utils.Best50WebPageRenderer
 import dev.naominet.empurple.utils.ResourceHelper
 import dev.naominet.purple.framework.beans.TextMessageBean
 import dev.naominet.purple.framework.core.Bot
@@ -205,9 +206,18 @@ class CommandB50 : ICommand {
     }
 
     private fun sendImage(userId: Long, groupId: Long, messageId: Long, cache: JSONObject) {
+        val webPage = Best50WebPageRenderer.render(cache)
+        val webUrl = "https://b50.naominet.dev/${webPage.relativePath}"
         val output = cachePngFile(userId)
-        Best50ImageRenderer.render(cache, output)
-        Bot.sendGroupMessage(groupId, MessageBuilder().reply(messageId).image(output).build())
+        Best50ImageRenderer.render(cache, output, webUrl)
+        Bot.sendGroupMessage(
+            groupId,
+            MessageBuilder()
+                .reply(messageId)
+                .image(output)
+                .append("\nBest50 网页: $webUrl")
+                .build()
+        )
     }
 
     private fun replyGroup(groupId: Long, messageId: Long, message: String) {

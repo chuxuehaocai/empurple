@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray
 import com.alibaba.fastjson2.JSONObject
 import dev.naominet.empurple.maimai.dto.UserRatingData
 import java.awt.Color
+import java.awt.Graphics2D
 import java.io.File
 import javax.imageio.ImageIO
 
@@ -11,7 +12,7 @@ object Best50ImageRenderer {
     private const val maxB35 = 35
     private const val maxB15 = 15
 
-    fun render(cacheJson: JSONObject, outputFile: File) {
+    fun render(cacheJson: JSONObject, outputFile: File, qrContent: String? = null) {
         MusicDataProvider.load()
         val userRating = cacheJson.getJSONObject("userRating") ?: JSONObject()
         val ratingList = parse(userRating.getJSONArray("ratingList")).take(maxB35)
@@ -42,9 +43,20 @@ object Best50ImageRenderer {
             val y = if (row < 7) 350 + 120 * row else 1250 + 120 * (row - 7)
             ImageBuilder.drawRatingCard(graphics, record, x, y)
         }
+
+        qrContent?.let { drawQrCode(graphics, background.width, background.height, it) }
         graphics.dispose()
         outputFile.parentFile?.mkdirs()
         ImageIO.write(background, "png", outputFile)
+    }
+
+    private fun drawQrCode(graphics: Graphics2D, width: Int, height: Int, content: String) {
+        val size = 128
+        val padding = 9
+        val x = width - size - padding - 64
+        val y = height - size - padding - 32
+
+        graphics.drawImage(QrCodeRenderer.render(content, size), x, y, null)
     }
 
     private fun parse(array: JSONArray?): List<UserRatingData> {

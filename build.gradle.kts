@@ -16,6 +16,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:3.3.2")
     implementation("io.ktor:ktor-client-cio:3.3.2")
     implementation("org.luaj:luaj-jse:3.0.1")
+    implementation("com.google.zxing:core:3.5.3")
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 }
