@@ -33,9 +33,10 @@ import java.time.Duration
 
 class CommandB50 : ICommand {
     override val name = "b50"
-
+    var useFullData = false
     override suspend fun exec(context: CommandContext) {
         val forceUpdate = context.args.trim().equals("u", ignoreCase = true)
+        useFullData = context.args.trim().equals("f", ignoreCase = true)
         val cache = cacheJsonFile(context.senderId)
         if (!forceUpdate && cache.exists()) {
             try {
@@ -72,11 +73,16 @@ class CommandB50 : ICommand {
                 ),
                 UserPreviewData::class.java
             )
-            val cache = if (preview.isLogin == 1) {
-                replyGroup(groupId, originMessageId, "账号当前已登录，将使用 Rating 数据生成。")
-                fetchLessData(targetUserId, preview)
-            } else {
-                fetchFullData(targetUserId, token, preview, qqUserId)
+            lateinit var cache: JSONObject
+            if(useFullData) {
+                cache = if (preview.isLogin == 1) {
+                    replyGroup(groupId, originMessageId, "账号当前已登录，将使用 Rating 数据生成。")
+                    fetchLessData(targetUserId, preview)
+                } else {
+                    fetchFullData(targetUserId, token, preview, qqUserId)
+                }
+            }else{
+                cache = fetchLessData(targetUserId, preview)
             }
             saveCache(qqUserId, cache)
             sendImage(qqUserId, groupId, originMessageId, cache)
