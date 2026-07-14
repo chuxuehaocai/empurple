@@ -94,7 +94,9 @@ class CommandB50 : ICommand {
             sendImage(qqUserId, groupId, originMessageId, cache)
             Bot.sendPrivateMessage(qqUserId, "Best50 图片已发送到群聊。")
         } catch (error: Exception) {
-            Bot.sendPrivateMessage(qqUserId, "Best50 生成失败: ${error.message}")
+            val messageText = "Best50 生成失败: ${error.message ?: error::class.simpleName}"
+            Bot.sendPrivateMessage(qqUserId, messageText)
+            replyGroup(groupId, originMessageId, messageText)
         }
     }
 
