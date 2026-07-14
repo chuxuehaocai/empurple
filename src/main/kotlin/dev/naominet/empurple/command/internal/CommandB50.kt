@@ -20,6 +20,7 @@ import dev.naominet.empurple.maimai.request.UserPreviewRequest
 import dev.naominet.empurple.maimai.request.UserRatingRequest
 import dev.naominet.empurple.utils.Best50ImageRenderer
 import dev.naominet.empurple.utils.Best50WebPageRenderer
+import dev.naominet.empurple.utils.Best50WebPublisher
 import dev.naominet.empurple.utils.ResourceHelper
 import dev.naominet.purple.framework.beans.TextMessageBean
 import dev.naominet.purple.framework.core.Bot
@@ -41,7 +42,7 @@ class CommandB50 : ICommand {
         val cache = cacheJsonFile(context.senderId)
         if (!forceUpdate && cache.exists()) {
             try {
-                sendImage(context.senderId, context.groupId, context.message.message_id, JSON.parseObject(cache.readText()))
+                sendImage(context.senderId, context.groupId, context.message.message_id, JSON.parseObject(cache.readText()), false)
             } catch (error: Exception) {
                 replyGroup(context.groupId, context.message.message_id, "缓存生成失败: ${error.message}，请使用 /b50 u 更新。")
             }
@@ -62,6 +63,8 @@ class CommandB50 : ICommand {
         try {
             val qr = message.raw_message
             require(qr.startsWith("SGWCMAID")) { "不是有效的二维码字符串，请重新执行 /b50 u。" }
+            Bot.sendPrivateMessage(qqUserId, "已收到二维码，正在更新 Best50 数据，请稍候。")
+            replyGroup(groupId, originMessageId, "已收到数据，正在更新 Best50。")
             val auth = QrAuthRequest(qr).execute()
             require(auth.first >= 10_000_000) { "二维码认证失败，错误码: ${auth.first}" }
             val targetUserId = auth.first
@@ -86,6 +89,8 @@ class CommandB50 : ICommand {
                 cache = fetchLessData(targetUserId, preview)
             }
             saveCache(qqUserId, cache)
+            Bot.sendPrivateMessage(qqUserId, "数据获取完成，正在生成图片和发布网页。")
+            replyGroup(groupId, originMessageId, "数据获取完成，正在生成图片和发布网页。")
             sendImage(qqUserId, groupId, originMessageId, cache)
             Bot.sendPrivateMessage(qqUserId, "Best50 图片已发送到群聊。")
         } catch (error: Exception) {
@@ -205,11 +210,23 @@ class CommandB50 : ICommand {
         }
     }
 
-    private fun sendImage(userId: Long, groupId: Long, messageId: Long, cache: JSONObject) {
-        val webPage = Best50WebPageRenderer.render(cache)
+    private fun sendImage(
+        userId: Long,
+        groupId: Long,
+        messageId: Long,
+        cache: JSONObject,
+        refreshWeb: Boolean = true
+    ) {
+        val webIdFile = cacheWebIdFile(userId)
+        val cachedWebId = webIdFile.takeIf(File::isFile)?.readText()?.trim()
+        val webPage = (if (refreshWeb) null else Best50WebPageRenderer.find(cachedWebId.orEmpty()))
+            ?: Best50WebPageRenderer.render(cache, cachedWebId).also { webIdFile.writeText(it.id) }
+        Best50WebPublisher.publish(webPage)
         val webUrl = "https://b50.naominet.dev/${webPage.relativePath}"
         val output = cachePngFile(userId)
-        Best50ImageRenderer.render(cache, output, webUrl)
+        if (refreshWeb || !output.isFile || cachedWebId != webPage.id) {
+            Best50ImageRenderer.render(cache, output, webUrl)
+        }
         Bot.sendGroupMessage(
             groupId,
             MessageBuilder()
@@ -227,5 +244,6 @@ class CommandB50 : ICommand {
     companion object {
         fun cacheJsonFile(userId: Long) = File(ResourceHelper.dataCacheFolder, "${userId}_best50.json")
         fun cachePngFile(userId: Long) = File(ResourceHelper.dataCacheFolder, "${userId}_best50.png")
+        fun cacheWebIdFile(userId: Long) = File(ResourceHelper.dataCacheFolder, "${userId}_best50_web_id.txt")
     }
 }

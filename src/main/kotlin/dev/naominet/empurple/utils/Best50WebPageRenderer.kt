@@ -14,15 +14,25 @@ object Best50WebPageRenderer {
         val relativePath: String
     )
 
-    fun render(cacheJson: JSONObject): Result {
+    fun find(id: String): Result? {
+        val validId = normalizeId(id) ?: return null
+        val outputFile = File(File(basicWebFolder(), validId), "index.html")
+        return outputFile.takeIf(File::isFile)?.let { Result(validId, it, "$validId/index.html") }
+    }
+
+    fun render(cacheJson: JSONObject, cachedId: String? = null): Result {
         MusicDataProvider.load()
-        val id = UUID.randomUUID().toString()
+        val id = normalizeId(cachedId) ?: UUID.randomUUID().toString()
         val outputFolder = File(basicWebFolder(), id)
         require(outputFolder.mkdirs() || outputFolder.isDirectory) { "Unable to create B50 web folder: ${outputFolder.path}" }
         val outputFile = File(outputFolder, "index.html")
         outputFile.writeText(buildHtml(cacheJson), StandardCharsets.UTF_8)
         return Result(id, outputFile, "$id/index.html")
     }
+
+    private fun normalizeId(id: String?): String? = runCatching {
+        UUID.fromString(id?.trim()).toString()
+    }.getOrNull()
 
     private fun basicWebFolder(): File = File(Paths.get("").toAbsolutePath().toFile(), "basicWeb").apply {
         require(mkdirs() || isDirectory) { "Unable to create basicWeb folder: $path" }
