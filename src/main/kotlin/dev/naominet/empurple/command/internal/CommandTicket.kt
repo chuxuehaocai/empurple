@@ -31,43 +31,41 @@ class CommandTicket: ICommand {
 
     override suspend fun exec(context: CommandContext) {
         val msgBuilder = MessageBuilder()
+        val ticketId = context.args.trim().takeIf { it.isNotEmpty() }?.toIntOrNull()
 
-        Bot.sendGroupMessage(
-            context.groupId,
-            msgBuilder.replyGroup(context.message.message_id, "请私聊本账号发送你的二维码解析出来的字符串...").build()
-        )
-        if(context.args.isEmpty()) {
-            CallbackManager.addCallback(
-                MaiCallbackData(
-                    context.senderId,
+        val callback = when {
+            context.args.isBlank() -> MaiCallbackData(
+                context.senderId,
+                context.groupId,
+                context.message.message_id,
+                ::privateMsgHandler_getCount,
+                LocalDateTime.now()
+            )
+
+            ticketId !in 1..5 -> {
+                Bot.sendGroupMessage(
                     context.groupId,
-                    context.message.message_id,
-                    ::privateMsgHandler_getCount,
-                    LocalDateTime.now()
+                    msgBuilder.replyGroup(context.message.message_id, "无效的 Ticket ID，请输入 1 到 5。").build()
                 )
+                return
+            }
+
+            else -> MaiCallbackData(
+                context.senderId,
+                context.groupId,
+                context.message.message_id,
+                ::privateMsgHandler_sendTicket,
+                LocalDateTime.now(),
+                ticketId!!
             )
         }
 
-        if(context.args.isNotEmpty() && (context.groupId == 1063238023L || context.groupId == 960156363L)) {
-            val num = context.args.toIntOrNull()
-            if (num != null && num in 1..5) {
-                CallbackManager.addCallback(
-                    MaiCallbackData(
-                        context.senderId,
-                        context.groupId,
-                        context.message.message_id,
-                        ::privateMsgHandler_sendTicket,
-                        LocalDateTime.now(),
-                        num
-                    )
-                )
-            }else{
-                Bot.sendGroupMessage(
-                    context.groupId,
-                    msgBuilder.replyGroup(context.message.message_id, "无效的Ticket ID。").build()
-                )
-            }
-        }
+        // Ticket 命令沿用旧行为：再次执行时用本次操作替换该用户之前等待中的回调。
+        CallbackManager.addCallback(callback, replaceExisting = true)
+        Bot.sendGroupMessage(
+            context.groupId,
+            msgBuilder.replyGroup(context.message.message_id, "请在 1 分钟内私聊本账号发送二维码解析出来的字符串...").build()
+        )
     }
 
     suspend fun privateMsgHandler_sendTicket(content: TextMessageBean, callbackData: MaiCallbackData) {

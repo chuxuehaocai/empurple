@@ -29,18 +29,31 @@ object CallbackManager {
         ) == null
     }
 
-    fun addCallback(callbackData: MaiCallbackData): Boolean = add(
-        callbackData.userId,
-        "maimai",
-        Duration.ofMinutes(1)
-    ) { message ->
-        callbackData.function(message, callbackData)
+    fun addCallback(callbackData: MaiCallbackData, replaceExisting: Boolean = false): Boolean {
+        val interaction = PendingInteraction(
+            callbackData.userId,
+            "maimai",
+            LocalDateTime.now().plus(Duration.ofMinutes(1))
+        ) { message ->
+            callbackData.function(message, callbackData)
+        }
+        removeExpiredCallbacks()
+        if (replaceExisting) {
+            pending[callbackData.userId] = interaction
+            return true
+        }
+        return pending.putIfAbsent(callbackData.userId, interaction) == null
     }
 
     suspend fun process(message: TextMessageBean): Boolean {
         removeExpiredCallbacks()
-        val userId = if (message.user_id != 0L) message.user_id else message.sender.user_id
-        val interaction = pending.remove(userId) ?: return false
+        // 不同私聊事件实现对 user_id 的填充并不一致；注册时使用的是 sender.user_id。
+        // 先保持对顶层 user_id 的兼容，找不到时再用实际发送者 ID，避免直接 return false。
+        val topLevelUserId = message.user_id.takeIf { it != 0L }
+        val senderId = message.sender.user_id
+        val interaction = topLevelUserId?.let(pending::remove)
+            ?: senderId.takeIf { it != 0L && it != topLevelUserId }?.let(pending::remove)
+            ?: return false
         interaction.handler(message)
         return true
     }

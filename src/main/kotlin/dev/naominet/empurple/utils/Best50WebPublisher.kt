@@ -9,6 +9,7 @@ object Best50WebPublisher {
 
     @Synchronized
     fun publish(webPage: Best50WebPageRenderer.Result) {
+        validateSiteAssets()
         val paths = listOf(
             "index.html",
             "app.js",
@@ -16,9 +17,10 @@ object Best50WebPublisher {
             "README.md",
             "vercel.json",
             webPage.relativePath
-        ).filter { File(repositoryFolder, it).isFile }
+        )
+        val missingPaths = paths.filterNot { File(repositoryFolder, it).isFile }
+        require(missingPaths.isEmpty()) { "Missing B50 web files: ${missingPaths.joinToString()}" }
 
-        require(paths.isNotEmpty()) { "No B50 web files found to publish" }
         runGit(listOf("add", "--") + paths)
 
         val hasChanges = runGit(listOf("diff", "--cached", "--quiet"), allowExitCodes = setOf(0, 1)).exitCode == 1
@@ -26,6 +28,21 @@ object Best50WebPublisher {
 
         runGit(listOf("commit", "-m", "Update Best50 web page ${webPage.id}"))
         runGit(listOf("push", "origin", "master"))
+    }
+
+    private fun validateSiteAssets() {
+        val index = File(repositoryFolder, "index.html").takeIf(File::isFile)?.readText(StandardCharsets.UTF_8).orEmpty()
+        val script = File(repositoryFolder, "app.js").takeIf(File::isFile)?.readText(StandardCharsets.UTF_8).orEmpty()
+        val styles = File(repositoryFolder, "styles.css").takeIf(File::isFile)?.readText(StandardCharsets.UTF_8).orEmpty()
+        require(
+            "id=\"jsonInput\"" in index &&
+                "id=\"songCardTemplate\"" in index &&
+                "function parseBest50" in script &&
+                ".song-card" in styles &&
+                "body.embedded .input-panel" in styles
+        ) {
+            "Refusing to publish: basicWeb root assets are not the Best50 parser"
+        }
     }
 
     private fun runGit(arguments: List<String>, allowExitCodes: Set<Int> = setOf(0)): CommandResult {

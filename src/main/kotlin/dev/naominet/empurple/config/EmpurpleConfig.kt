@@ -18,4 +18,8 @@ data class EmpurpleConfig(
     val regionName: String = "",
     val placeId: Int = 0,
     val placeName: String = "",
+    val webUiEnabled: Boolean = false,
+    val webUiHost: String = "127.0.0.1",
+    val webUiPort: Int = 8080,
+    val webUiToken: String = "",
 ): IConfig
