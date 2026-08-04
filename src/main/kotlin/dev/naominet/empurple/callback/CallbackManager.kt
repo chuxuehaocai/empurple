@@ -23,6 +23,7 @@ object CallbackManager {
         handler: suspend (TextMessageBean) -> Unit
     ): Boolean {
         removeExpiredCallbacks()
+
         return pending.putIfAbsent(
             userId,
             PendingInteraction(userId, type, LocalDateTime.now().plus(timeout), handler)
