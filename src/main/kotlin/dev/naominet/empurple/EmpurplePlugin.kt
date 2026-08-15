@@ -3,6 +3,8 @@ package dev.naominet.empurple
 import dev.naominet.empurple.callback.CallbackManager
 import dev.naominet.empurple.command.CommandManager
 import dev.naominet.empurple.config.EmpurpleConfig
+import dev.naominet.empurple.llm.LLMService
+import dev.naominet.empurple.llm.LlmMentionHandler
 import dev.naominet.empurple.script.ScriptCommandLoader
 import dev.naominet.empurple.script.ScriptService
 import dev.naominet.empurple.utils.MinecraftMOTDHelper
@@ -38,6 +40,7 @@ object EmpurplePlugin : IPlugin {
         scope = newScope()
         ResourceHelper.initialize()
         config = ConfigManager.register(EmpurpleConfig())
+        LLMService.initialize(config)
         kotlinx.coroutines.runBlocking { ScriptService.initialize() }
         ScriptCommandLoader.load()
         if (config.webUiEnabled) {
@@ -46,6 +49,7 @@ object EmpurplePlugin : IPlugin {
 
         groupListener = EventManager.groupMessageEvent.listen { msg ->
             scope.launch {
+                if (LlmMentionHandler.process(msg, config)) return@launch
                 if (msg.raw_message.equals("看看里面")){
                     if(msg.group_id == 981665238L || msg.group_id == 981701956L){
                         val sb = MessageBuilder()

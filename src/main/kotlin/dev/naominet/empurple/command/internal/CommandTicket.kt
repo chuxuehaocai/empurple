@@ -97,21 +97,24 @@ class CommandTicket: ICommand {
 
         //GetUserChargeApi
         val getUserChargeApiRequest = GetUserChargeApiRequest(targetUserId)
-        val chargeDataBean  = JSON.parseObject(
+        val chargeDataBean = JSON.parseObject(
             MaimaiApiClient.call(getUserChargeApiRequest.toJson(), "GetUserChargeApi", targetUserId),
             UserChargeData::class.java
         )
 
         msgBuilder.reply(callbackData.originMsgId)
-        for (chargeData in chargeDataBean.userChargeList!!){
-            if(chargeData.chargeId == callbackData.ticketId){
-                if(chargeData.stock != 0){
-                    Bot.sendPrivateMessage(
-                        content.user_id,
-                        msgBuilder.reply(content.message_id)
-                            .append("在尝试发票时出现了一个异常。当前Ticket ID对应的功能票数量不为0.出于安全考虑，不会继续发票。").build()
-                    )
-                    return
+        if (chargeDataBean.userChargeList != null) {
+            for (chargeData in chargeDataBean.userChargeList!!) {
+                if (chargeData.chargeId == callbackData.ticketId) {
+                    if (chargeData.stock != 0) {
+                        Bot.sendPrivateMessage(
+                            content.user_id,
+                            msgBuilder.reply(content.message_id)
+                                .append("在尝试发票时出现了一个异常。当前Ticket ID对应的功能票数量不为0.出于安全考虑，不会继续发票。")
+                                .build()
+                        )
+                        return
+                    }
                 }
             }
         }
