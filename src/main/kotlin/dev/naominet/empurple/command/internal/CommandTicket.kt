@@ -104,9 +104,9 @@ class CommandTicket: ICommand {
 
         msgBuilder.reply(callbackData.originMsgId)
         if (chargeDataBean.userChargeList != null) {
-            for (chargeData in chargeDataBean.userChargeList!!) {
-                if (chargeData.chargeId == callbackData.ticketId) {
-                    if (chargeData.stock != 0) {
+            for ((chargeId, stock) in chargeDataBean.userChargeList) {
+                if (chargeId == callbackData.ticketId) {
+                    if (stock != 0) {
                         Bot.sendPrivateMessage(
                             content.user_id,
                             msgBuilder.reply(content.message_id)
