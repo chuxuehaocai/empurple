@@ -26,7 +26,9 @@ object Best50ImageRenderer {
         val graphics = background.createGraphics()
         DesignSystem.applyHints(graphics)
 
-        ResourceHelper.iconImage(cacheJson.getString("iconId") ?: "0")
+        cacheJson.getString("iconId")
+            ?.takeIf { it.isNotBlank() && it != "0" }
+            ?.let(ResourceHelper::iconImage)
             ?.let { graphics.drawImage(it, 115, 110, null) }
 
         graphics.color = Color(61, 61, 61)

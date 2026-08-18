@@ -1,8 +1,10 @@
 package dev.naominet.empurple.command
 
 import dev.naominet.empurple.command.internal.CommandB50
+import dev.naominet.empurple.command.internal.CommandBind
 import dev.naominet.empurple.command.internal.CommandScript
 import dev.naominet.empurple.command.internal.CommandTicket
+import dev.naominet.empurple.command.internal.CommandStrength
 import dev.naominet.empurple.command.internal.CommandWhoami
 import dev.naominet.empurple.script.UserScriptRegistry
 import dev.naominet.purple.framework.beans.TextMessageBean
@@ -17,6 +19,8 @@ object CommandManager {
         register(CommandTicket())
         register(CommandScript())
         register(CommandB50())
+        register(CommandStrength())
+        register(CommandBind())
     }
 
     fun register(command: ICommand) {

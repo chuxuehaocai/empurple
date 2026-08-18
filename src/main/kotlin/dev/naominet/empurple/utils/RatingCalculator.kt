@@ -1,7 +1,6 @@
 package dev.naominet.empurple.utils
 
-import kotlin.math.floor
-import kotlin.math.min
+import kotlin.math.roundToInt
 
 object RatingCalculator {
     data class RaResult(val ra: Int, val rate: String)
@@ -13,23 +12,34 @@ object RatingCalculator {
     fun computeRaWithRate(ds: Double, achievement: Double): RaResult = compute(ds, achievement)
 
     private fun compute(ds: Double, achievement: Double): RaResult {
-        val (baseRa, rate) = when {
-            achievement < 50 -> 7.0 to "D"
-            achievement < 60 -> 8.0 to "C"
-            achievement < 70 -> 9.6 to "B"
-            achievement < 75 -> 11.2 to "BB"
-            achievement < 80 -> 12.0 to "BBB"
-            achievement < 90 -> 13.6 to "A"
-            achievement < 94 -> 15.2 to "AA"
-            achievement < 97 -> 16.8 to "AAA"
-            achievement < 98 -> 20.0 to "S"
-            achievement < 99 -> 20.3 to "Sp"
-            achievement < 99.5 -> 20.8 to "SS"
-            achievement < 100 -> 21.1 to "SSp"
-            achievement < 100.5 -> 21.6 to "SSS"
-            else -> 22.4 to "SSSp"
+        val achievementRaw = (achievement * 10_000.0).roundToInt().coerceIn(0, 1_005_000)
+        val (offset, rate) = when {
+            achievementRaw < 100_000 -> 0 to "D"
+            achievementRaw < 200_000 -> 16 to "D"
+            achievementRaw < 300_000 -> 32 to "D"
+            achievementRaw < 400_000 -> 48 to "D"
+            achievementRaw < 500_000 -> 64 to "D"
+            achievementRaw < 600_000 -> 80 to "C"
+            achievementRaw < 700_000 -> 96 to "B"
+            achievementRaw < 750_000 -> 112 to "BB"
+            achievementRaw < 799_999 -> 120 to "BBB"
+            achievementRaw < 800_000 -> 128 to "BBB"
+            achievementRaw < 900_000 -> 136 to "A"
+            achievementRaw < 940_000 -> 152 to "AA"
+            achievementRaw < 969_999 -> 168 to "AAA"
+            achievementRaw < 970_000 -> 176 to "AAA"
+            achievementRaw < 980_000 -> 200 to "S"
+            achievementRaw < 989_999 -> 203 to "Sp"
+            achievementRaw < 990_000 -> 206 to "Sp"
+            achievementRaw < 995_000 -> 208 to "SS"
+            achievementRaw < 999_999 -> 211 to "SSp"
+            achievementRaw < 1_000_000 -> 214 to "SSp"
+            achievementRaw < 1_004_999 -> 216 to "SSS"
+            achievementRaw < 1_005_000 -> 222 to "SSS"
+            else -> 224 to "SSSp"
         }
-        val capped = min(100.5, achievement)
-        return RaResult(floor(ds * (capped / 100.0) * baseRa).toInt(), rate)
+        val scoreRate = (ds * 10.0).roundToInt()
+        val ra = scoreRate.toLong() * achievementRaw * offset / 100_000_000L
+        return RaResult(ra.toInt(), rate)
     }
 }
