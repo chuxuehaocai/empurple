@@ -2,6 +2,7 @@ package dev.naominet.empurple.command
 
 import dev.naominet.empurple.command.internal.CommandB50
 import dev.naominet.empurple.command.internal.CommandBind
+import dev.naominet.empurple.command.internal.CommandJrrp
 import dev.naominet.empurple.command.internal.CommandStrength
 import dev.naominet.empurple.command.internal.CommandTicket
 import dev.naominet.empurple.command.internal.CommandWhoami
@@ -18,6 +19,8 @@ object CommandManager {
         register(CommandB50())
         register(CommandStrength())
         register(CommandBind())
+        register(CommandJrrp())
+        register(CommandJrrp("今日人品"))
     }
 
     fun register(command: ICommand) {

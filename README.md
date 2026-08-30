@@ -161,6 +161,7 @@ configs/purple-framework-config.json
 | `whoami` | `/whoami` | 获取用户资料并生成资料图片 |
 | `ticket` | `/ticket` | 不带参数查询功能票；使用 `/ticket 1` 到 `/ticket 5` 下发对应功能票 |
 | `看看实力` | `/看看实力` | 根据已绑定用户的 Best 50 数据生成 LLM 实力评价 |
+| `jrrp` | `/jrrp` 或 `/今日人品` | 查看当天稳定、次日刷新的今日人品分数 |
 
 ### Best 50 流程
 
