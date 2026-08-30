@@ -5,8 +5,6 @@ import dev.naominet.empurple.command.CommandManager
 import dev.naominet.empurple.config.EmpurpleConfig
 import dev.naominet.empurple.llm.LLMService
 import dev.naominet.empurple.llm.LlmMentionHandler
-import dev.naominet.empurple.script.ScriptCommandLoader
-import dev.naominet.empurple.script.ScriptService
 import dev.naominet.empurple.utils.MinecraftMOTDHelper
 import dev.naominet.empurple.utils.ResourceHelper
 import dev.naominet.empurple.web.WebUiPanel
@@ -41,8 +39,6 @@ object EmpurplePlugin : IPlugin {
         ResourceHelper.initialize()
         config = ConfigManager.register(EmpurpleConfig())
         LLMService.initialize(config)
-        kotlinx.coroutines.runBlocking { ScriptService.initialize() }
-        ScriptCommandLoader.load()
         if (config.webUiEnabled) {
             WebUiPanel.start(config)
         }
@@ -50,22 +46,6 @@ object EmpurplePlugin : IPlugin {
         groupListener = EventManager.groupMessageEvent.listen { msg ->
             scope.launch {
                 if (LlmMentionHandler.process(msg, config)) return@launch
-                if (msg.raw_message.equals("看看里面")){
-                    if(msg.group_id == 981665238L || msg.group_id == 981701956L){
-                        val sb = MessageBuilder()
-                        val motdInfo = MinecraftMOTDHelper.getMOTD("nbb.rainplay.cn", 14878)
-
-                        sb.reply(msg.message_id)
-
-                        if(motdInfo.players.online != 0){
-                            sb.append("有${motdInfo.players.online}个入在服务器里喵。")
-                        }else{
-                            sb.append("没人在线喵。")
-                        }
-
-                        Bot.sendGroupMessage(msg.group_id, sb.build())
-                    }
-                }
                 CommandManager.process(msg)
             }
         }
